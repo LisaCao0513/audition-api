@@ -5,6 +5,10 @@ spring:
     import: "optional:configserver:"
   main:
     allow-bean-definition-overriding: true
+  security:
+    user:
+      name: lisa
+      password: strongpassword
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
@@ -22,7 +26,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: '*' #TODO enable only info and health for security purposes. Consider that we may want to still access other actuator endpoints securely.
+        include: info, health #TODO enable only info and health for security purposes. Consider that we may want to still access other actuator endpoints securely.
 logging:
   pattern:
     level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"

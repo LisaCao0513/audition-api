@@ -7,8 +7,8 @@ plugins {
     id "com.github.spotbugs" version "5.0.14"
     id "io.freefair.lombok" version "8.0.1"
     // TODO Enable checkstyle and PMD. Fix all the relevant issues.
-    //id "checkstyle"
-    //id "pmd"
+    id "checkstyle"
+    id "pmd"
 }
 
 group = 'com.audition'
@@ -18,7 +18,7 @@ targetCompatibility = '17'
 
 
 // TODO allow for code-analysis.gradle to be applied for code analysis.
-// apply from: 'config/code-analysis.gradle'
+apply from: 'config/code-analysis.gradle'
 
 configurations {
     compileOnly {
@@ -40,30 +40,45 @@ ext {
 dependencies {
 
     // TODO Clean up unused dependencies. Add comments on consideration on any improvements you made.
-    implementation "org.springframework.boot:spring-boot-starter-actuator"
-    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
-    implementation "org.springframework.boot:spring-boot-starter-web"
+    // Spring Boot starters
+    implementation "org.springframework.boot:spring-boot-starter-web" // Core starter for web applications
+    implementation "org.springframework.boot:spring-boot-starter-security"
+    // Security starter, updated to latest version
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa" // Starter for JPA
+    implementation "org.springframework.boot:spring-boot-starter-actuator" // Actuator starter for monitoring
+
+    // Spring Cloud and related
     implementation "org.springframework.cloud:spring-cloud-starter-config"
-    implementation "org.springframework.boot:spring-boot-starter-webflux"
-    implementation "org.springframework.boot:spring-boot-starter-aop"
-    implementation "io.micrometer:micrometer-tracing-bridge-brave"
-    implementation "io.micrometer:micrometer-tracing"
-    implementation "io.micrometer:micrometer-registry-prometheus"
-    implementation "io.micrometer:context-propagation"
+    // Configuration management for distributed systems
     implementation "org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j"
-    implementation "org.springframework.cloud:spring-cloud-starter-config"
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
+    // Resilience4j circuit breaker
 
-    developmentOnly "org.springframework.boot:spring-boot-devtools"
-    runtimeOnly "io.micrometer:micrometer-registry-prometheus"
+    // Micrometer for metrics and tracing
+    implementation "io.micrometer:micrometer-registry-prometheus" // Prometheus registry for Micrometer
+    implementation "io.micrometer:micrometer-tracing-bridge-brave" // Brave bridge for Micrometer tracing
+    implementation "io.micrometer:micrometer-tracing" // Micrometer tracing support
+    implementation "io.micrometer:context-propagation" // Context propagation for Micrometer
 
+    // OpenTelemetry dependencies
+    implementation 'io.opentelemetry:opentelemetry-api:1.18.0' // OpenTelemetry API
+    implementation 'io.opentelemetry:opentelemetry-sdk:1.18.0' // OpenTelemetry SDK for tracing
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp' // otlp for OpenTelemetry
 
-    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
-    implementation "ch.qos.logback:logback-core:${logbackVersion}"
-    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    // Springdoc OpenAPI for API documentation
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}" // OpenAPI UI for web MVC
 
-    testImplementation "org.springframework.boot:spring-boot-starter-test"
-    testImplementation "io.projectreactor:reactor-test"
+    // Logging
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}" // SLF4J API
+    implementation "ch.qos.logback:logback-core:${logbackVersion}" // Logback core
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}" // Logback classic for SLF4J
+
+    // Development and test dependencies
+    developmentOnly "org.springframework.boot:spring-boot-devtools" // Dev tools for development
+    runtimeOnly "io.micrometer:micrometer-registry-prometheus" // Prometheus registry for runtime
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test" // Starter for testing
+    testImplementation 'org.springframework.security:spring-security-test' // Spring security test
+    testImplementation "io.projectreactor:reactor-test" // Reactor test support
 }
 
 dependencyManagement {
@@ -73,12 +88,12 @@ dependencyManagement {
 }
 
 
-task prepareGitHooks(type: Copy) {
+tasks.register('prepareGitHooks', Copy) {
     from "$projectDir/git-hooks"
     into "$projectDir/.git/hooks"
     include "*"
 }
-tasks.matching { it.name != 'prepareGitHooks' }.all { Task task -> task.dependsOn prepareGitHooks }
+tasks.matching { it.name != 'prepareGitHooks' }.configureEach { Task task -> task.dependsOn prepareGitHooks }
 
 
 tasks.named('test') {
